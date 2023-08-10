@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Code Scanner</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <script src="https://cdn.rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
+</head>
+<body>
+    <h1>QR Code Scanner</h1>
+    <div id="cameraContainer">
+        <video id="preview"></video>
+    </div>
+    <button onclick="startQRCodeScan()">QR Code scannen</button>
+    <div id="qrcode"></div>
+    <p id="scannedContent"></p>
+    <button onclick="switchCamera()">Kamera wechseln</button>
+
+    <script>
+        let qrcodeScanner = null;
+
+        function startQRCodeScan() {
+            const cameraContainer = document.getElementById("cameraContainer");
+            cameraContainer.style.display = "block";
+
+            const qrcodeDiv = document.getElementById("qrcode");
+            qrcodeDiv.innerHTML = "";
+            const qrcode = new QRCode(qrcodeDiv, {
+                width: 128,
+                height: 128
+            });
+
+            qrcodeScanner = new Instascan.Scanner({ video: document.getElementById('preview') });
+            qrcodeScanner.addListener('scan', function(content) {
+                qrcode.makeCode(content);
+                document.getElementById("scannedContent").textContent = "Gescannter Inhalt: " + content;
+                qrcodeScanner.stop();
+                cameraContainer.style.display = "none";
+            });
+            Instascan.Camera.getCameras().then(function(cameras) {
+                if (cameras.length > 0) {
+                    qrcodeScanner.start(cameras[0]);
+                } else {
+                    console.error('Keine Kamera gefunden');
+                }
+            });
+        }
+
+        function switchCamera() {
+            if (qrcodeScanner) {
+                qrcodeScanner.stop();
+                const currentCamera = qrcodeScanner._activeCameraId;
+                const newCamera = currentCamera === 0 ? 1 : 0;
+                qrcodeScanner.start(newCamera);
+            }
+        }
+    </script>
+</body>
+</html>
